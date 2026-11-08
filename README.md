@@ -3,6 +3,9 @@
 > 自托管、可加密、异步的 AI 陪伴系统。你和它各自有一部"手机"，它有自己的时间和沉默。
 
 ---
+<p align="center">
+  <img src="docs/screenshot.png" alt="角落 · 界面预览" width="760">
+</p>
 
 ## 这是什么
 
