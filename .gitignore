@@ -1,0 +1,41 @@
+# 运行数据
+data/
+logs/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+data/token.txt
+
+# 证书与密钥（绝对不能提交）
+tls/
+*.pem
+*.key
+*.pk8
+*.p12
+*.jks
+
+# 安卓构建产物与签名
+android/out/
+android/keystore/
+*.apk
+*.keystore
+
+# 前端体积包
+static/*.apk
+
+# 本地配置
+.env
+.env.local
+*.code-workspace
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# 系统
+.DS_Store
+Thumbs.db

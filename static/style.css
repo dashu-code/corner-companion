@@ -1,0 +1,332 @@
+/* 角落 · 微信风格界面
+ * 目标：不是"像微信的设计语言"，而是**照着微信的尺寸和颜色做**。
+ * 参考：微信 8.x 深色/浅色聊天页 —— 顶栏 52px、气泡圆角 5px、
+ *      我的绿 #95ec69（浅）/#3eb575（深）、对方白/#2c2c2c、时间戳灰小字。
+ */
+
+/* 全局：hidden 属性永远优先 */
+[hidden] { display: none !important; }
+
+:root {
+  --bg: #ededed;
+  --nav: #ededed;
+  --nav-border: #dcdcdc;
+  --bubble-ai: #ffffff;
+  --bubble-me: #95ec69;
+  --bubble-me-text: #0f1f0b;
+  --text: #191919;
+  --sub: #9b9b9b;
+  --line: #e2e2e2;
+  --input-bg: #ffffff;
+  --icon: #4b4b4b;
+  --accent: #07c160;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111111;
+    --nav: #1f1f1f;
+    --nav-border: #2a2a2a;
+    --bubble-ai: #2c2c2c;
+    --bubble-me: #3eb575;
+    --bubble-me-text: #e8f7ee;
+    --text: #d9d9d9;
+    --sub: #6b6b6b;
+    --line: #242424;
+    --input-bg: #2a2a2a;
+    --icon: #d9d9d9;
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 -apple-system, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  overscroll-behavior: none;
+}
+body { display: flex; flex-direction: column; height: 100dvh; }
+
+/* ---------------- 顶栏（微信：左返回/右更多，标题居中） ---------------- */
+.nav {
+  flex: 0 0 auto;
+  height: calc(52px + var(--safe-top));
+  padding: var(--safe-top) 6px 0;
+  background: var(--nav);
+  border-bottom: 1px solid var(--nav-border);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 5;
+}
+.navTitle {
+  position: absolute; left: 0; right: 0;
+  text-align: center;
+  font-size: 17px; font-weight: 600;
+  pointer-events: none;
+  color: var(--text);
+}
+.navBack, .navIcon {
+  position: relative; z-index: 1;
+  border: none; background: transparent; color: var(--text);
+  height: 44px; min-width: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+.navBack:active, .navIcon:active { background: rgba(127,127,127,.14); }
+.navStatus {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 16px 8px;
+  font-size: 11px; color: var(--sub);
+  background: var(--bg);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #bbb; }
+.dot.on { background: var(--accent); }
+.dot.off { background: #fa5151; }
+.buildTag {
+  margin-left: auto;
+  font-size: 10px; color: var(--sub);
+  border: 1px solid var(--line); border-radius: 4px;
+  padding: 0 4px;
+}
+
+/* ---------------- 联系人列表（微信：头像 48、名称 17、预览 13、时间右） ---------------- */
+.contacts { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.agentList { flex: 1; overflow-y: auto; }
+
+.contact {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px;
+  border: none; background: transparent; color: inherit;
+  width: 100%; text-align: left;
+  position: relative;
+}
+.contact::after {
+  content: ""; position: absolute;
+  left: 64px; right: 0; bottom: 0;
+  height: 1px; background: var(--line);
+  transform: scaleY(.5); transform-origin: bottom;
+}
+.contact:active { background: rgba(127,127,127,.08); }
+.contactMid { flex: 1; min-width: 0; }
+.contactName {
+  font-size: 17px; font-weight: 400; color: var(--text);
+  display: flex; align-items: center; gap: 5px;
+}
+.contactSub { display: none; }
+.contactCount { font-size: 12px; color: var(--sub); }
+.kindEmoji { font-size: 13px; opacity: .85; }
+
+/* ---------------- 头像（微信：圆角 5px 方形） ---------------- */
+.avatar {
+  width: 40px; height: 40px; flex: 0 0 40px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 600;
+  user-select: none;
+  overflow: hidden;
+}
+.avatar.ai { background: #2f3a3a; color: #c9c3b6; }
+.avatar.me { background: #7bc75a; color: #fff; }
+.avatar.head { width: 40px; height: 40px; flex-basis: 40px; border-radius: 5px; font-size: 16px; }
+
+/* ---------------- 消息区 ---------------- */
+.chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 14px 12px 18px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+.time-sep {
+  align-self: center;
+  font-size: 12px; color: var(--sub);
+  background: transparent;
+  padding: 0; margin: 2px 0 4px;
+}
+
+.row { display: flex; align-items: flex-start; gap: 10px; max-width: 100%; min-width: 0; }
+.row.me { justify-content: flex-end; }
+.wrap { display: flex; flex-direction: column; max-width: 70%; min-width: 0; }
+.row.me .wrap { align-items: flex-end; }
+.row.ai .wrap { align-items: flex-start; }
+
+.bubble {
+  position: relative;
+  max-width: 100%;
+  padding: 9px 12px;
+  border-radius: 5px;
+  background: var(--bubble-ai);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  animation: pop .12s ease-out;
+}
+.row.me .bubble { background: var(--bubble-me); color: var(--bubble-me-text); }
+
+/* 气泡小尖角（微信的招牌细节） */
+.bubble::after {
+  content: "";
+  position: absolute; top: 12px;
+  width: 0; height: 0;
+  border: 6px solid transparent;
+}
+.row.ai .bubble::after {
+  left: -11px;
+  border-right-color: var(--bubble-ai);
+}
+.row.me .bubble::after {
+  right: -11px;
+  border-left-color: var(--bubble-me);
+}
+
+@keyframes pop { from { transform: scale(.98); opacity: .6 } to { transform: none; opacity: 1 } }
+
+.row.pending .bubble { opacity: .55; }
+.row.failed .bubble { box-shadow: 0 0 0 1px #fa5151 inset; }
+
+/* 主动消息：加一行小字，不改变气泡样式 */
+.row.proactive .bubble { border: 1px solid rgba(7,193,96,.35); }
+.tag {
+  font-size: 11px; color: var(--accent);
+  margin-bottom: 4px;
+}
+
+/* ---------------- 输入栏（微信：语音 + 输入框 + 表情 + 加号） ---------------- */
+.composer {
+  flex: 0 0 auto;
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 8px 8px calc(8px + var(--safe-bottom));
+  background: var(--nav);
+  border-top: 1px solid var(--nav-border);
+}
+.composerIcon {
+  flex: 0 0 auto;
+  width: 36px; height: 36px;
+  border: none; background: transparent; color: var(--icon);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+.composerIcon:active { background: rgba(127,127,127,.14); }
+.inputwrap { flex: 1; }
+#text {
+  width: 100%;
+  min-height: 36px;
+  max-height: 110px;
+  resize: none;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.35;
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+}
+#text::placeholder { color: var(--sub); }
+#text::before { content: ""; }
+
+/* 回到底部（微信没有，但长聊天有用；做小一点不碍事） */
+.jump {
+  position: fixed; right: 12px;
+  bottom: calc(64px + var(--safe-bottom));
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--nav-border);
+  background: var(--nav); color: var(--sub);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .15s; z-index: 6;
+}
+.jump.show { opacity: .92; pointer-events: auto; }
+
+.empty { margin: auto; color: var(--sub); font-size: 14px; text-align: center; line-height: 1.9; }
+.empty span { font-size: 13px; opacity: .8; }
+
+.chat[hidden], .contacts[hidden] { display: none; }
+
+/* hidden 属性会被 display:flex 覆盖，这里显式处理 */
+.composerIcon[hidden] { display: none; }
+.jump[hidden] { display: none; }
+
+/* 通知权限提示条（只在被关掉时出现） */
+.notifyBar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  margin: 0;
+  font-size: 13px; color: #8a5a00;
+  background: #fff7e0;
+  border-bottom: 1px solid #f0e0b8;
+}
+@media (prefers-color-scheme: dark) {
+  .notifyBar { background: #2a2416; color: #f0c674; border-bottom-color: #3a3320; }
+}
+.notifyBar span { flex: 1; min-width: 0; }
+.notifyBtn {
+  border: 1px solid #d9b45a; background: transparent; color: inherit;
+  font-size: 12px; padding: 4px 10px; border-radius: 6px;
+}
+.notifyBtn.ghost { border-color: transparent; opacity: .75; }
+.notifyBtn:active { opacity: .6; }
+
+/* 未读红点（微信式：数字球） */
+.badge {
+  flex: 0 0 auto;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #fa5151;
+  color: #fff;
+  font-size: 11px; font-weight: 500;
+  line-height: 18px; text-align: center;
+  letter-spacing: -0.2px;
+}
+
+/* ---------------- 设置（二级页）：调试信息都收在这里 ---------------- */
+.settingsPage { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--bg); }
+.settingsList { flex: 1; overflow-y: auto; padding: 12px 0 40px; }
+.sGroup {
+  background: var(--nav);
+  border-top: 1px solid var(--nav-border);
+  border-bottom: 1px solid var(--nav-border);
+}
+.srow {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 13px 16px; font-size: 15px;
+  border-bottom: 1px solid var(--line);
+}
+.srow:last-child { border-bottom: none; }
+.sName { color: var(--text); flex: 0 0 auto; }
+.sValue { color: var(--sub); text-align: right; font-size: 14px; word-break: break-all; }
+.sMono { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+.sActions { justify-content: flex-start; gap: 10px; }
+.sHint { padding: 14px 16px; color: var(--sub); font-size: 12px; }
+.settingsPage .notifyBtn {
+  font-size: 13px; padding: 6px 12px; border-radius: 6px;
+  border: 1px solid var(--line); background: var(--input-bg); color: var(--text);
+}
+.settingsPage .notifyBtn.ghost { opacity: .7; }
+
+/* 通知坏了时，主页加号上的小点（6px，不打扰） */
+.hasDotSlot { position: relative; }
+.navDot {
+  position: absolute; top: 9px; right: 9px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #fa5151;
+  box-shadow: 0 0 0 2px var(--nav);
+}
+
+/* 老的通知提示条样式作废（保留兼容，不再显示） */
+.notifyBar { display: none !important; }

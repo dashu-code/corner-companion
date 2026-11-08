@@ -1,0 +1,6 @@
+{
+  "versionCode": 1,
+  "versionName": "1.0",
+  "apk": "/static/companion-1.0.apk",
+  "notes": "示例：把打包好的 APK 放到 static/ 下并改这里，App 打开时会提示更新。"
+}

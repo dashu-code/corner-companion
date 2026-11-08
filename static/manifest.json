@@ -1,0 +1,9 @@
+{
+  "name": "角落",
+  "short_name": "角落",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ededed",
+  "theme_color": "#ededed",
+  "lang": "zh-CN"
+}

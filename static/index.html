@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ededed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>角落</title>
+<link rel="stylesheet" href="/static/style.css?v=28">
+</head>
+<body>
+
+<!-- ==================== 联系人 ==================== -->
+<section id="contacts" class="contacts">
+  <header class="nav">
+    <div class="navTitle">角落</div>
+    <button class="navIcon hasDotSlot" id="settingsBtn" aria-label="设置">
+      <svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span class="navDot" id="navDot" hidden></span>
+    </button>
+  </header>
+  <div class="navStatus"><span class="dot" id="dot"></span><span id="statusText">连接中</span></div>
+  <main id="agentList" class="agentList"></main>
+</section>
+
+<!-- ==================== 聊天 ==================== -->
+<section id="chat" class="chat" hidden>
+  <header class="nav">
+    <button class="navBack" id="backBtn" aria-label="返回">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M15 4L7 12l8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="navTitle" id="peerName">聊天</div>
+    <button class="navIcon" aria-label="更多">
+      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>
+    </button>
+  </header>
+
+  <main id="list" class="list" aria-live="polite"></main>
+
+  <footer class="composer">
+    <button class="composerIcon" aria-label="语音">
+      <svg viewBox="0 0 24 24" width="26" height="26"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8M8.5 12h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="inputwrap">
+      <textarea id="text" rows="1" placeholder="" autocomplete="off" enterkeyhint="send" maxlength="4000"></textarea>
+    </div>
+    <button class="composerIcon" id="sendIcon" aria-label="发送" hidden>
+      <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 12l16-8-6 8 6 8-16-8z" fill="currentColor"/></svg>
+    </button>
+    <button class="composerIcon" id="plusIcon" aria-label="更多">
+      <svg viewBox="0 0 24 24" width="26" height="26"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 8v8M8 12h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+  </footer>
+</section>
+
+<!-- ==================== 设置（二级页） ==================== -->
+<section id="settings" class="settingsPage" hidden>
+  <header class="nav">
+    <button class="navBack" id="settingsBack" aria-label="返回">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M15 4L7 12l8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="navTitle">设置</div>
+    <span class="navIcon"></span>
+  </header>
+
+  <main class="settingsList">
+    <div class="sGroup">
+      <div class="srow"><span class="sName">App 版本</span><span class="sValue" id="appVersionText">—</span></div>
+      <div class="srow"><span class="sName">网页版本</span><span class="sValue" id="buildText">—</span></div>
+      <div class="srow"><span class="sName">连着的服务</span><span class="sValue sMono" id="serverText">—</span></div>
+      <div class="srow"><span class="sName">通知</span><span class="sValue" id="notifyStatusText">检查中…</span></div>
+      <div class="srow sActions">
+        <button class="notifyBtn" id="notifyFix">去开启通知</button>
+        <button class="notifyBtn ghost" id="notifyTest">发一条测试通知</button>
+      </div>
+    </div>
+    <div class="sHint">调试信息都收在这里，主页不放。</div>
+  </main>
+</section>
+
+<script src="/static/app.js?v=28"></script>
+</body>
+</html>
