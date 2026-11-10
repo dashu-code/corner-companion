@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#ededed">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>角落</title>
-<link rel="stylesheet" href="/static/style.css?v=28">
+<link rel="stylesheet" href="/static/style.css?v=50">
 </head>
 <body>
 
@@ -30,8 +30,18 @@
       <svg viewBox="0 0 24 24" width="24" height="24"><path d="M15 4L7 12l8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
     <div class="navTitle" id="peerName">聊天</div>
-    <button class="navIcon" aria-label="更多">
-      <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/></svg>
+    <button class="navIcon ttsBtn" id="ttsBtn" aria-label="朗读开关">
+      <!-- 开：喇叭 + 声波 -->
+      <svg id="ttsOnIcon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 9.5h3l4.2-3.2v11.4L7 14.5H4z"/>
+        <path d="M15.2 9.2a4 4 0 0 1 0 5.6"/>
+        <path d="M17.8 6.8a7.2 7.2 0 0 1 0 10.4"/>
+      </svg>
+      <!-- 关：喇叭 + 斜杠 -->
+      <svg id="ttsOffIcon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <path d="M4 9.5h3l4.2-3.2v11.4L7 14.5H4z"/>
+        <path d="M15.5 9.5l5 5M20.5 9.5l-5 5"/>
+      </svg>
     </button>
   </header>
 
@@ -74,10 +84,28 @@
         <button class="notifyBtn ghost" id="notifyTest">发一条测试通知</button>
       </div>
     </div>
+    <div class="sGroup" id="voiceGroup">
+      <div class="srow"><span class="sName">朗读音色</span>
+        <select class="sSelect" id="voiceSelect"></select>
+      </div>
+      <div class="srow"><span class="sName">语速</span>
+        <select class="sSelect" id="rateSelect"></select>
+      </div>
+      <div class="srow"><span class="sName">音调</span>
+        <select class="sSelect" id="pitchSelect"></select>
+      </div>
+      <div class="srow sActions">
+        <button class="notifyBtn" id="voiceTest">试听</button>
+        <button class="notifyBtn ghost" id="voiceStop">停止</button>
+      </div>
+      <div class="srow"><span class="sName">状态</span><span class="sValue" id="voiceStatus">检查中…</span></div>
+    </div>
+    <div class="sHint">聊天页右上角的喇叭，控制这个联系人念不念（依附型默认开，独立型默认关）。</div>
+
     <div class="sHint">调试信息都收在这里，主页不放。</div>
   </main>
 </section>
 
-<script src="/static/app.js?v=28"></script>
+<script src="/static/app.js?v=50"></script>
 </body>
 </html>

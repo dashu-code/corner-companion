@@ -28,7 +28,7 @@ public final class TlsPin {
 
     /** 服务器证书 SHA-256 指纹（小写十六进制，不含冒号）。 */
     public static final String SHA256 =
-            "REPLACE_WITH_YOUR_CERT_SHA256";
+            "9ae00afd65cbba234d57bbd05fa237d0ff50d30cba7c39ad1ec08ef4e1322701";
 
     private TlsPin() {}
 

@@ -2,7 +2,7 @@
 """联系人（agents）：一个 App 里可以存在多个 AI，各自独立。
 
 两种标签：
-- independent（独立）：它自己起名字、自己写人设，不经过你塑造。
+- independent（独立）：它自己起名字、自己写人设（像「隅」）。
 - dependent（依附）：由使用者塑造——给一个名字和一段设定，它按那个设定活。
 
 隔离原则：**记忆不共享**。每个 agent 有自己的消息、原始层、情节层、人设。
@@ -115,8 +115,13 @@ def list_all():
             "SELECT a.*, "
             "(SELECT COUNT(*) FROM messages m WHERE m.agent_id=a.id AND coalesce(m.hidden,0)=0) AS msg_count, "
             "(SELECT COUNT(*) FROM messages m WHERE coalesce(m.agent_id,1)=a.id "
-            " AND m.role='ai' AND m.seen=0 AND coalesce(m.hidden,0)=0) AS unread "
-            "FROM agents a ORDER BY a.kind='dependent', a.id"
+            " AND m.role='ai' AND m.seen=0 AND coalesce(m.hidden,0)=0) AS unread, "
+            "(SELECT MAX(m.ts) FROM messages m WHERE coalesce(m.agent_id,1)=a.id "
+            " AND coalesce(m.hidden,0)=0) AS last_ts, "
+            "(SELECT m.text FROM messages m WHERE coalesce(m.agent_id,1)=a.id "
+            " AND coalesce(m.hidden,0)=0 ORDER BY m.id DESC LIMIT 1) AS last_text "
+            "FROM agents a "
+            "ORDER BY (last_ts IS NULL), last_ts DESC, a.id"
         ).fetchall()
     return [dict(r) for r in rows]
 

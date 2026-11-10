@@ -62,7 +62,7 @@ public class MainActivity extends Activity {
     private void askServer(final SharedPreferences sp) {
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-        input.setHint("https://YOUR_SERVER_HOST:8443/?t=口令");
+        input.setHint("https://你的服务器:8443/?t=口令");
         input.setText("https://");
 
         new AlertDialog.Builder(this)
@@ -333,13 +333,26 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web != null && web.canGoBack()) {
-            web.goBack();
-            return;
+        if (web == null) { exitByDoublePress(); return; }
+        // 先问页面：在聊天/设置里由页面自己退回列表；
+        // 页面说"不处理"才进入退出流程。这样不依赖 WebView 的历史栈，
+        // 首次进入（栈里只有一层）也不会直接退出 App。
+        try {
+            web.evaluateJavascript(
+                    "(window.__handleBack ? (window.__handleBack() ? '1' : '0') : '0')",
+                    value -> {
+                        boolean handled = value != null && value.contains("1");
+                        if (!handled) exitByDoublePress();
+                    });
+        } catch (Throwable t) {
+            exitByDoublePress();
         }
+    }
+
+    private void exitByDoublePress() {
         long now = System.currentTimeMillis();
         if (now - lastBackAt < 2000) {
-            super.onBackPressed();
+            finish();
         } else {
             lastBackAt = now;
             android.widget.Toast.makeText(this, "再按一次退出；长按返回键可改服务器地址",
@@ -358,6 +371,148 @@ public class MainActivity extends Activity {
     }
     /** 网页 ↔ App 的一点点桥：只用来查/开通知权限、发测试通知。 */
     private class NativeBridge {
+
+        // ---- 朗读（依附型）：把文字念出来 ----
+        private android.speech.tts.TextToSpeech tts;
+        private boolean ttsReady = false;
+        private java.util.ArrayDeque<String> ttsQueue = new java.util.ArrayDeque<>();
+
+        private void ensureTts() {
+            if (tts != null) return;
+            tts = new android.speech.tts.TextToSpeech(MainActivity.this, status -> {
+                ttsReady = (status == android.speech.tts.TextToSpeech.SUCCESS);
+                if (ttsReady) {
+                    try {
+                        java.util.Locale zh = java.util.Locale.SIMPLIFIED_CHINESE;
+                        int r = tts.setLanguage(zh);
+                        if (r == android.speech.tts.TextToSpeech.LANG_MISSING_DATA
+                                || r == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
+                            tts.setLanguage(java.util.Locale.getDefault());
+                        }
+                        tts.setSpeechRate(0.95f);
+                    } catch (Throwable ignored) { }
+                    while (!ttsQueue.isEmpty()) {
+                        speakNow(ttsQueue.poll());
+                    }
+                }
+            });
+        }
+
+        private void speakNow(String text) {
+            if (tts == null || !ttsReady) {
+                if (ttsQueue.size() < 5) ttsQueue.add(text);
+                return;
+            }
+            try {
+                // 去掉换行和多余空白，念起来顺一点
+                String clean = text.replaceAll("[\\r\\n]+", "，").replaceAll("[\\s]{2,}", " ").trim();
+                if (clean.isEmpty()) return;
+                tts.speak(clean, android.speech.tts.TextToSpeech.QUEUE_ADD, null, "utt-" + System.nanoTime());
+            } catch (Throwable ignored) { }
+        }
+
+        @android.webkit.JavascriptInterface
+        public void speak(String text) {
+            if (text == null || text.trim().isEmpty()) return;
+            ensureTts();
+            if (ttsReady) speakNow(text);
+            else ttsQueue.add(text);
+        }
+
+        @android.webkit.JavascriptInterface
+        public void stopSpeak() {
+            try {
+                if (tts != null) tts.stop();
+                ttsQueue.clear();
+            } catch (Throwable ignored) { }
+        }
+
+        /** 朗读开关是否打开（默认开，只对依附型生效由网页判断）。 */
+        @android.webkit.JavascriptInterface
+        public boolean ttsEnabled() {
+            return getSharedPreferences(PREFS, MODE_PRIVATE)
+                    .getBoolean("tts_enabled", true);
+        }
+
+        @android.webkit.JavascriptInterface
+        public void setTtsEnabled(boolean on) {
+            getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean("tts_enabled", on).apply();
+            if (!on) stopSpeak();
+        }
+
+        // ---- 表情包：图在 APK assets 里，映射表 stickers.json: {"开心":"st04"} ----
+        private final java.util.HashMap<String, String> stickerCache = new java.util.HashMap<>();
+        private java.util.HashMap<String, java.util.List<String>> stickerMap = null;
+
+        private java.util.HashMap<String, java.util.List<String>> loadStickerMap() {
+            if (stickerMap != null) return stickerMap;
+            java.util.HashMap<String, java.util.List<String>> m = new java.util.HashMap<>();
+            try {
+                java.io.InputStream in = getAssets().open("stickers.json");
+                java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[4096];
+                int n;
+                while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+                in.close();
+                org.json.JSONObject o = new org.json.JSONObject(bos.toString("UTF-8"));
+                java.util.Iterator<String> it = o.keys();
+                while (it.hasNext()) {
+                    String k = it.next();
+                    java.util.List<String> list = new java.util.ArrayList<>();
+                    org.json.JSONArray arr = o.optJSONArray(k);
+                    if (arr != null) {
+                        for (int i = 0; i < arr.length(); i++) {
+                            String v = arr.optString(i);
+                            if (v != null && !v.isEmpty()) list.add(v);
+                        }
+                    } else {
+                        String v = o.optString(k);
+                        if (v != null && !v.isEmpty()) list.add(v);
+                    }
+                    if (!list.isEmpty()) m.put(k, list);
+                }
+            } catch (Throwable ignored) { }
+            stickerMap = m;
+            return m;
+        }
+
+        @android.webkit.JavascriptInterface
+        public String stickerList() {
+            StringBuilder sb = new StringBuilder("[");
+            boolean first = true;
+            for (String name : loadStickerMap().keySet()) {
+                if (!first) sb.append(',');
+                sb.append('"').append(name).append('"');
+                first = false;
+            }
+            return sb.append(']').toString();
+        }
+
+        @android.webkit.JavascriptInterface
+        public String stickerData(String name) {
+            try {
+                if (name == null) return "";
+                java.util.List<String> list = loadStickerMap().get(name);
+                if (list == null || list.isEmpty()) return "";
+                String key = list.size() == 1 ? list.get(0)
+                        : list.get(new java.util.Random().nextInt(list.size()));
+                String hit = stickerCache.get(key);
+                if (hit != null) return hit;
+                java.io.InputStream in = getAssets().open("stickers/" + key + ".jpg");
+                java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0) bos.write(buf, 0, n);
+                in.close();
+                String uri = "data:image/jpeg;base64,"
+                        + android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP);
+                stickerCache.put(key, uri);
+                return uri;
+            } catch (Throwable t) {
+                return "";
+            }
+        }
+
         @android.webkit.JavascriptInterface
         public void updateServer(final String base) {
             // 网页发现自己在 https 上跑（服务端 302 迁移过来的），

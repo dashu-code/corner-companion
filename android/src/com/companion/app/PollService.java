@@ -116,9 +116,9 @@ public class PollService extends Service {
             return;
         }
 
-        // 长轮询：服务器挂着请求，一有新消息就立刻返回 -> 通知几乎即时（接近微信）
+        // 长轮询（所有联系人）：服务器挂着请求，一有新消息就立刻返回
         JSONObject r = getJson(
-                withToken(base, token, "/api/wait?after=" + last + "&timeout=" + WAIT_SECONDS),
+                withToken(base, token, "/api/wait_any?after=" + last + "&timeout=" + WAIT_SECONDS),
                 (int) (WAIT_SECONDS + 15) * 1000);
         int n = r.optInt("new", 0);
         long maxId = r.optLong("max_id", last);
@@ -126,9 +126,10 @@ public class PollService extends Service {
         if (maxId > last) sp.edit().putLong(MainActivity.KEY_LAST, maxId).apply();
         if (n > 0) {
             String preview = r.optString("preview", "有新消息");
-            report("收到新消息 n=" + n + " id=" + maxId);
+            String who = r.optString("agent_name", "");
+            report("收到新消息 n=" + n + " id=" + maxId + " agent=" + who);
             try {
-                notifyMessage(preview);
+                notifyMessage(preview, who);
                 report("notify 已调用 preview=" + preview);
             } catch (Throwable t) {
                 report("notify 失败: " + t.getClass().getSimpleName() + ": " + t.getMessage());
@@ -281,6 +282,10 @@ public class PollService extends Service {
 
     @SuppressWarnings("deprecation")
     private void notifyMessage(String preview) {
+        notifyMessage(preview, "");
+    }
+
+    private void notifyMessage(String preview, String agentName) {
         Notification.Builder b = (Build.VERSION.SDK_INT >= 26)
                 ? new Notification.Builder(this, CH_MSG)
                 : new Notification.Builder(this);

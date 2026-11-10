@@ -316,15 +316,20 @@ def take_next():
 
 # ---------------------------------------------------------------- 反馈：回了/没回
 
-def mark_acked():
-    """用户回消息时调用：最近 24 小时发出的主动消息标记为已回。"""
+def mark_acked(agent_id: int = 1):
+    """用户回消息时调用：把**这个联系人**最近 24 小时发出的主动消息标记为已回。
+
+    必须按 agent 区分：否则你回 A，B 之前发的主动消息也会被当成"回了"，
+    导致 B 的"被冷落"判断永远为假。
+    """
     try:
         cutoff = (_now() - timedelta(hours=24)).isoformat(timespec="seconds")
         with db() as conn:
             n = conn.execute(
                 "UPDATE intentions SET state='acked', t_acked=? "
-                "WHERE state='sent' AND t_acked IS NULL AND t_sent >= ?",
-                (_iso(), cutoff),
+                "WHERE state='sent' AND t_acked IS NULL AND t_sent >= ? "
+                "AND coalesce(agent_id,1)=?",
+                (_iso(), cutoff, agent_id),
             ).rowcount
         return n
     except sqlite3.Error:
